@@ -55,6 +55,45 @@ app.get("/id",async (req,res)=>{
     }
 })
 
+app.delete("/user",async (req,res)=>{    
+    const id=req.body._id
+    try{
+        const users= await User.findByIdAndDelete(id)
+        res.send("Deleted Successfully")
+    }
+    catch(err){
+        res.status(403).send("Something went wrong")
+    }
+})
+
+app.patch("/user",async (req,res)=>{   
+    const id=req.body._id
+    const data=req.body 
+    try{
+        const users= await User.findByIdAndUpdate(id, data,{returnDocument: "after",
+            runValidators:true
+        })
+        console.log(users)
+        res.send("Updated Successfully")
+    }
+    catch(err){
+        res.status(403).send("Something went wrong")
+    }
+})
+
+app.patch("/user1",async (req,res)=>{   
+    const emailid=req.body.emailId
+    const data=req.body 
+    try{
+        const users= await User.findOneAndUpdate({emailId:emailid}, data)
+        console.log(users)
+        res.send("Updated Successfully")
+    }
+    catch(err){
+        res.status(403).send("Something went wrong")
+    }
+})
+
 dbconnect().then(()=>{
     console.log("DB connect succesfull");
     app.listen(7777,()=>{
