@@ -24,6 +24,7 @@ app.use("/signup",async (req,res)=>{
     
 })
 
+//login authentication
 app.post("/login",async (req,res)=>{
     try{
         const {emailId,password}=req.body
