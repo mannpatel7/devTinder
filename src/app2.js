@@ -2,11 +2,18 @@ const express=require("express");
 const app=express();
 const {dbconnect}=require("./config/database")
 const User=require("./models/user")
+const {validateData}=require("./utilz/validate")
+const bcrypt=require("bcrypt")
 
 app.use(express.json()) //Middleware json->js object
 
 app.use("/signup",async (req,res)=>{
-    const user=new User(req.body)
+    //validation
+    validateData(req)
+    const {firstName,lastName,emailId,password,skills}=req.body
+    //encryption
+    const passwordHash= await bcrypt.hash(password,10)
+    const user=new User({firstName, lastName, emailId, password: passwordHash,skills})
     try{
     await user.save()
     res.send("user added successfully")
@@ -15,6 +22,25 @@ app.use("/signup",async (req,res)=>{
         res.status(403).send("Error in saving the user:" + err.message)
     }
     
+})
+
+app.post("/login",async (req,res)=>{
+    try{
+        const {emailId,password}=req.body
+        const user= await User.findOne({emailId:emailId})
+        if(!user){
+            throw new Error("Invalid credentials")
+        }
+        const ispasswordvalid=await bcrypt.compare(password,user.password)
+        if(!ispasswordvalid){
+            throw new Error("Invalid credentials")
+        }
+
+        res.send("Login Successfully")
+    }catch(err){
+        res.status(403).send("Error in saving the user:" + err.message)
+    }
+
 })
 
 app.get("/user",async (req,res)=>{
