@@ -1,27 +1,28 @@
-const authentication=(req,res,next)=>{
-    console.log("Authentication started..")
-    const tokens="hello";
-    const isValid= tokens==="hell";
-    if(!isValid){
-        res.status(401).send("You are not admin")
-    }
-    else{
-        next();
-    }
-}
+const jwt=require("jsonwebtoken")
+const User = require("../models/user")
 
-const userauth=(req,res,next)=>{
-    console.log("Authentication started..")
-    const username="Mann_Patel";
-    const password=12345
-    const isValid= username==="Mann_Patel" &&  password===12345;
-    if(!isValid){
-        res.status(401).send("You Enter wrong details")
+
+const userauth=async (req,res,next)=>{
+    try{
+        const {token}=req.cookies
+        if(!token){
+            throw new Error("Invalid Token")
+        }
+        //validate cookie
+        const decodemessage=await jwt.verify(token,"devTinder@123")
+        const {_id}=decodemessage
+    
+        const user= await User.findById(_id)
+        if(!user){
+            throw new Error("User not exist")
+        }
+        req.user=user
+        next()
     }
-    else{
-        next();
-    }
+        catch(err){
+            res.status(403).send("Error in logining the user:" + err.message)
+        }
 }
 module.exports={
-    authentication,userauth,
+    userauth
 }

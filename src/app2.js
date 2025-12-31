@@ -4,8 +4,12 @@ const {dbconnect}=require("./config/database")
 const User=require("./models/user")
 const {validateData}=require("./utilz/validate")
 const bcrypt=require("bcrypt")
+const cookieParser=require("cookie-parser")
+const jwt=require("jsonwebtoken")
+const {userauth}=require("./middlewares/auth")
 
 app.use(express.json()) //Middleware json->js object
+app.use(cookieParser()) //middleware for reading cookies
 
 app.use("/signup",async (req,res)=>{
     //validation
@@ -36,12 +40,31 @@ app.post("/login",async (req,res)=>{
         if(!ispasswordvalid){
             throw new Error("Invalid credentials")
         }
+        //create jwt token
+        const token=await jwt.sign({_id:user._id},"devTinder@123",{expiresIn:"1d"})//use 3s for testing
+        console.log(token)
 
+        //add token into cookie
+        res.cookie("token",token)
         res.send("Login Successfully")
     }catch(err){
         res.status(403).send("Error in saving the user:" + err.message)
     }
 
+})
+app.get("/profile",userauth,async (req,res)=>{
+    try{
+    const user= req.user
+    res.send(user)
+    }
+    catch(err){
+        res.status(403).send("Error in logining the user:" + err.message)
+    }
+})
+
+app.post("/sendingrequest",userauth,async (req,res,next)=>{
+    const user=req.user
+    res.send(user.firstName + " sent request successfully")
 })
 
 app.get("/user",async (req,res)=>{
